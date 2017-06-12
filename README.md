@@ -1,1 +1,1 @@
-#tem-game-name
+#temp-game-name
