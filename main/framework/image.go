@@ -35,12 +35,20 @@ const (
 )
 
 //Constructor for Sprite struct.  There are several possible arguments for the sprite:
-//  * New(string) - Creates a sprite with the image with string showing the relative location of the image.  Origin will be the center.
-//  * New(string, origin) - Creates a sprite with the image using the image given by string.  Origin places the origin at the specified place.  Top left corner for TopLeft, for example.
+//  * New(string)
+// 	* New(string, Canvas)
+//  * New(string, Origin)
+//	* New(string, Canvas, Origin)
+//Where:
+//	* String is the location of the image, relative to the executable file.
+//	* Canvas is the container in which the image will be stored in.  It will be defaulted to the container holding the entire window if it has not been specified.
+//	* Origin is where the coordinate system for this image is based on.  For example, TopLeft places the origin on the top left corner of the image, so if the image is moved to (0, 0), the top left of the image will be placed at (0, 0).  It will be defaulted to the center of the image if it has not been specified.
 func InitSprite(i ...interface{}) Sprite {
 	var dir string
 	var x float32
 	var y float32
+	var canvas Canvas
+
 	//The string must be provided if it's more than one
 	if len(i) >= 1 {
 		test, succ := i[0].(string)
@@ -51,14 +59,39 @@ func InitSprite(i ...interface{}) Sprite {
 	}
 
 	if len(i) == 2 {
-		_, succ := i[1].(origin)
-		if !succ {
-			panic(fmt.Sprintf("Invalid argument.  Expected Origin, got %T", i[1]))
+		_, succ1 := i[1].(origin)
+		_, succ2 := i[1].(Canvas)
+		if !succ1 && !succ2 {
+			panic(fmt.Sprintf("Invalid argument.  Expected Origin or Canvas, got %T", i[1]))
 		}
-		loc, _ := i[1].(int32)
-		x = float32(math.Mod(float64(loc), 3.0) - 2)
-		y = float32(loc) / 3.0 - 2
+		if succ1 {
+			loc, _ := i[1].(int32)
+			x = float32(math.Mod(float64(loc), 3.0) - 2)
+			y = float32(loc) / 3.0 - 2
+		} else {
+			canvas = i[1].(Canvas)
+		}
 	}
+
+	if len(i) == 3 {
+		_, succ2 := i[2].(origin)
+		_, succ1 := i[1].(Canvas)
+
+		if succ2 {
+			loc, _ := i[2].(int32)
+			x = float32(math.Mod(float64(loc), 3.0) - 2)
+			y = float32(loc) / 3.0 - 2
+		} else {
+			panic(fmt.Sprintf("Invalid argument.  Expected Origin, got %T", i[2]))
+		}
+
+		if succ1 {
+			canvas = i[1].(Canvas)
+		} else {
+			panic(fmt.Sprintf("Invalid argument.  Expected Canvas, got %T", i[1]))
+		}
+	}
+
 
 	if len(i) == 0 || len(i) > 3 {
 		panic("Invalid number of arguments.  Could not match with any of the possible argument numbers")
@@ -66,9 +99,9 @@ func InitSprite(i ...interface{}) Sprite {
 
 	img, err := createImage(dir)
 	if err != nil {
-		panic(fmt.Sprintf("Could not find file at |%v|\n%v", dir, err))
+		panic(fmt.Sprintf("Could not load the file \"%v\".\nDoes it exist?  If so, is it in .png format?", path.Join(global.Directory, dir), err))
 	}
-	vao := createVao(img)
+	vao := createVao(img, canvas)
 	texture := createTexture(img)
 	return Sprite{
 		X:     x,
@@ -103,17 +136,19 @@ func createImage(dir string) (*image.RGBA, error) {
 	return rgba, nil
 }
 
-func createVao(img *image.RGBA) uint32 {
+func createVao(img *image.RGBA, canvas Canvas) uint32 {
 	//calculate the image's x and y depending on image aspect ratio
-	rec := img.Rect
 	var x float32
 	var y float32
-	if ratio := float32(rec.Max.X) / float32(rec.Max.Y); ratio > 1.0 {
+
+	ratio := float32(img.Rect.Size().X) / float32(img.Rect.Size().Y)
+	cratio := canvas.GetAspectRatio()
+	if ratio > 1.0 {
 		ratio = 1 / ratio
 		x = 1.0
-		y = ratio / 2
+		y = ratio / cratio
 	} else {
-		x = ratio / 2
+		x = ratio / cratio
 		y = 1.0
 	}
 
