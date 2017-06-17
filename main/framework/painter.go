@@ -11,7 +11,7 @@ import (
 
 const (
 	vertexShaderSource = `
-        #version 450
+        #version 400
         in vec3 vp;
 		in vec2 tx;
 
@@ -23,7 +23,7 @@ const (
         }
     ` + "\x00"
 	fragmentShaderSource = `
-        #version 450
+        #version 400
 		in vec2 TexCoord;
 
 		out vec4 frag_colour;
@@ -49,7 +49,7 @@ func initGlfw(width int, height int) *glfw.Window {
 
 	glfw.WindowHint(glfw.Resizable, glfw.False)
 	glfw.WindowHint(glfw.ContextVersionMajor, 4)
-	glfw.WindowHint(glfw.ContextVersionMinor, 5)
+	glfw.WindowHint(glfw.ContextVersionMinor, 0)
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 
