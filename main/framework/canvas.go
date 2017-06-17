@@ -5,14 +5,14 @@ import (
 )
 
 type Canvas struct {
-	Width float32
+	Width  float32
 	Height float32
-	X float32
-	Y float32
+	X      float32
+	Y      float32
 }
 
 //Initiates a canvas to hold the text, sprite, or shape objects.
-func InitCanvas(i...float32) Canvas {
+func InitCanvas(i ...float32) Canvas {
 	//Set up the default values
 	var width float32 = 1.0
 	var height float32 = 1.0
@@ -37,7 +37,7 @@ func InitCanvas(i...float32) Canvas {
 			y = f
 			countFloat++
 		} else {
-			panic ("Invalid argument.  Found more than 4 floats in the argument")
+			panic("Invalid argument.  Found more than 4 floats in the argument")
 		}
 	}
 
@@ -45,7 +45,7 @@ func InitCanvas(i...float32) Canvas {
 		panic("Invalid argument.  Both the pairs (width, height) and (x, y) must be specified.")
 	}
 
-	return Canvas {
+	return Canvas{
 		width,
 		height,
 		x,

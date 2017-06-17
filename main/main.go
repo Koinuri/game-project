@@ -1,17 +1,17 @@
 package main
 
 import (
-	"runtime"
 	"os"
 	"path"
+	"runtime"
 
 	"github.com/koinuri/game-project/main/framework"
 	"github.com/koinuri/game-project/main/global"
 )
 
 const (
-	width              = 1366
-	height             = 768
+	width  = 1366
+	height = 768
 )
 
 //Initializes the the program.

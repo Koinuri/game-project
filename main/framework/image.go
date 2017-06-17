@@ -1,28 +1,29 @@
 package framework
 
 import (
-	"image"
-	"os"
 	"fmt"
+	"image"
 	"image/draw"
 	"image/png"
 	"math"
+	"os"
 	"path"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/koinuri/game-project/main/global"
 )
+
 type Sprite struct {
-	X     float32
-	Y     float32
-	vao   uint32
+	X       float32
+	Y       float32
+	vao     uint32
 	texture uint32
 }
 
 type origin uint32
 
 const (
-	_ = iota
+	_              = iota
 	TopLeft origin = iota
 	TopCenter
 	TopRight
@@ -67,7 +68,7 @@ func InitSprite(i ...interface{}) Sprite {
 		if succ1 {
 			loc, _ := i[1].(int32)
 			x = float32(math.Mod(float64(loc), 3.0) - 2)
-			y = float32(loc) / 3.0 - 2
+			y = float32(loc)/3.0 - 2
 		} else {
 			canvas = i[1].(Canvas)
 		}
@@ -80,7 +81,7 @@ func InitSprite(i ...interface{}) Sprite {
 		if succ2 {
 			loc, _ := i[2].(int32)
 			x = float32(math.Mod(float64(loc), 3.0) - 2)
-			y = float32(loc) / 3.0 - 2
+			y = float32(loc)/3.0 - 2
 		} else {
 			panic(fmt.Sprintf("Invalid argument.  Expected Origin, got %T", i[2]))
 		}
@@ -91,7 +92,6 @@ func InitSprite(i ...interface{}) Sprite {
 			panic(fmt.Sprintf("Invalid argument.  Expected Canvas, got %T", i[1]))
 		}
 	}
-
 
 	if len(i) == 0 || len(i) > 3 {
 		panic("Invalid number of arguments.  Could not match with any of the possible argument numbers")
@@ -104,9 +104,9 @@ func InitSprite(i ...interface{}) Sprite {
 	vao := createVao(img, canvas)
 	texture := createTexture(img)
 	return Sprite{
-		X:     x,
-		Y:     y,
-		vao: vao,
+		X:       x,
+		Y:       y,
+		vao:     vao,
 		texture: texture,
 	}
 }
@@ -115,7 +115,7 @@ func createImage(dir string) (*image.RGBA, error) {
 	//read the image file, return empty rgba if error
 	imgFile, err := os.Open(path.Join(global.Directory, dir))
 	if err != nil {
-		a := image.Rectangle{image.Point {0,0}, image.Point {0,0}}
+		a := image.Rectangle{image.Point{0, 0}, image.Point{0, 0}}
 		return image.NewRGBA(a), err
 	}
 	defer imgFile.Close()
@@ -123,7 +123,7 @@ func createImage(dir string) (*image.RGBA, error) {
 	//decode the image file to use, return empty rgba is error
 	img, err := png.Decode(imgFile)
 	if err != nil {
-		a := image.Rectangle{image.Point {0,0}, image.Point {0,0}}
+		a := image.Rectangle{image.Point{0, 0}, image.Point{0, 0}}
 		return image.NewRGBA(a), err
 	}
 
@@ -153,9 +153,9 @@ func createVao(img *image.RGBA, canvas Canvas) uint32 {
 	}
 
 	//create vertices based on the calculated x's and y's and the coordinate of image each vertices should be associated to
-	var vec []float32 = []float32{ 
+	var vec []float32 = []float32{
 		x * -1, y, 0, 0.0, 0.0, //top left
-		x, y, 0, 1.0, 0.0,               //top right
+		x, y, 0, 1.0, 0.0, //top right
 		x * -1, y * -1, 0, 0.0, 1.0, //bottom left
 		x, y * -1, 0, 1.0, 1.0, //bottom right
 	}
@@ -175,19 +175,19 @@ func createVao(img *image.RGBA, canvas Canvas) uint32 {
 	var vbo uint32
 	gl.GenBuffers(1, &vbo)
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.BufferData(gl.ARRAY_BUFFER, len(vec) * 4, gl.Ptr(vec), gl.STATIC_DRAW)
+	gl.BufferData(gl.ARRAY_BUFFER, len(vec)*4, gl.Ptr(vec), gl.STATIC_DRAW)
 
 	//create ebo that will be used for the currently binded vao
 	var ebo uint32
 	gl.GenBuffers(1, &ebo)
 	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
-	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(ind) * 4, gl.Ptr(ind), gl.STATIC_DRAW)
+	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(ind)*4, gl.Ptr(ind), gl.STATIC_DRAW)
 
 	//set the attributes
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 5 * 4, gl.PtrOffset(0))
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 5*4, gl.PtrOffset(0))
 	gl.EnableVertexAttribArray(0)
 
-	gl.VertexAttribPointer(1, 2, gl.FLOAT, false, 5 * 4, gl.PtrOffset(3 * 4))
+	gl.VertexAttribPointer(1, 2, gl.FLOAT, false, 5*4, gl.PtrOffset(3*4))
 	gl.EnableVertexAttribArray(1)
 
 	return vao
@@ -212,14 +212,14 @@ func createTexture(img *image.RGBA) uint32 {
 
 	//bind the image to this texture
 	gl.TexImage2D(
-		gl.TEXTURE_2D, 
-		0, 
-		gl.RGBA, 
-		int32(img.Rect.Size().X), 
-		int32(img.Rect.Size().Y), 
-		0, 
-		gl.RGBA, 
-		gl.UNSIGNED_BYTE, 
+		gl.TEXTURE_2D,
+		0,
+		gl.RGBA,
+		int32(img.Rect.Size().X),
+		int32(img.Rect.Size().Y),
+		0,
+		gl.RGBA,
+		gl.UNSIGNED_BYTE,
 		gl.Ptr(img.Pix))
 
 	//create mipmap, which makes smaller image crispy
