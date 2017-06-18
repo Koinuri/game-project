@@ -37,10 +37,20 @@ func main() {
 	defer framework.Clean()
 
 	//Drawing logic, only draws cute Akane right in the middle of the window for testing purposes
-	spr := framework.InitSprite("kotonoha-7.png", framework.InitCanvas(1.0, 1.0))
+	sprtopleft := framework.InitSprite("kotonoha-7.png", framework.InitCanvas(.5, .5, -.5, .5))
+	sprtopright := framework.InitSprite("kotonoha-7.png", framework.InitCanvas(.5, .5, .5, .5))
+	sprbotleft := framework.InitSprite("kotonoha-7.png", framework.InitCanvas(.5, .5, -.5, -.5))
+	sprbotright := framework.InitSprite("kotonoha-7.png", framework.InitCanvas(.5, .5, .5, -.5))
 
 	//Main loop to draw the drawing logic created
 	for !window.ShouldClose() {
-		framework.Draw(&spr, window, program)
+		framework.InitFrame(program)
+
+		framework.Draw(&sprtopleft)
+		framework.Draw(&sprtopright)
+		framework.Draw(&sprbotleft)
+		framework.Draw(&sprbotright)
+
+		framework.SwapWindowAndPollEvents(window)
 	}
 }

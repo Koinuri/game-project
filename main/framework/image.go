@@ -11,6 +11,7 @@ import (
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/koinuri/game-project/main/global"
+	"github.com/go-gl/mathgl/mgl32"
 )
 
 type Sprite struct {
@@ -18,6 +19,7 @@ type Sprite struct {
 	Y       float32
 	vao     uint32
 	texture uint32
+	transformation mgl32.Mat4
 }
 
 type origin uint32
@@ -59,6 +61,7 @@ func InitSprite(i ...interface{}) Sprite {
 		dir = test
 	}
 
+	//If it's two arguments, it can either be origin or canvas
 	if len(i) == 2 {
 		_, succ1 := i[1].(origin)
 		_, succ2 := i[1].(Canvas)
@@ -74,6 +77,7 @@ func InitSprite(i ...interface{}) Sprite {
 		}
 	}
 
+	//If it's three arguments, all string, origin, and canvas are present
 	if len(i) == 3 {
 		_, succ2 := i[2].(origin)
 		_, succ1 := i[1].(Canvas)
@@ -93,21 +97,28 @@ func InitSprite(i ...interface{}) Sprite {
 		}
 	}
 
+	//If arguments are not within intervals [1, 3], it's invalid numbers of arguments
 	if len(i) == 0 || len(i) > 3 {
 		panic("Invalid number of arguments.  Could not match with any of the possible argument numbers")
 	}
 
+	//create an image, then create vao and texture based on that image
 	img, err := createImage(dir)
 	if err != nil {
 		panic(fmt.Sprintf("Could not load the file \"%v\".\nDoes it exist?  If so, is it in .png format?", path.Join(global.Directory, dir), err))
 	}
-	vao := createVao(img, canvas)
+	vao := createVao(img, &canvas)
 	texture := createTexture(img)
+
+	//the transformation matrix should be identity matrix at the beginning
+	tmat := mgl32.Ident4()
+
 	return Sprite{
 		X:       x,
 		Y:       y,
 		vao:     vao,
 		texture: texture,
+		transformation: tmat,
 	}
 }
 
@@ -136,28 +147,33 @@ func createImage(dir string) (*image.RGBA, error) {
 	return rgba, nil
 }
 
-func createVao(img *image.RGBA, canvas Canvas) uint32 {
+func createVao(img *image.RGBA, canvas *Canvas) uint32 {
 	//calculate the image's x and y depending on image aspect ratio
 	var x float32
 	var y float32
 
+	//The aspect ratio of the image and canvas
 	ratio := float32(img.Rect.Size().X) / float32(img.Rect.Size().Y)
 	cratio := canvas.GetAspectRatio()
+
+	//the bigger side will cover the entire canvas's side, and the other side will get the size equal to the ratio of both ratios 
+	//to ensure that the canvas shape will not affect the image ratio
 	if ratio > 1.0 {
 		ratio = 1 / ratio
-		x = 1.0
-		y = ratio / cratio
+		x = canvas.Width
+		y = canvas.Height * (ratio / cratio)
 	} else {
-		x = ratio / cratio
-		y = 1.0
+		x = canvas.Width * (ratio / cratio)
+		y = canvas.Height
 	}
 
 	//create vertices based on the calculated x's and y's and the coordinate of image each vertices should be associated to
+	//translate the vectors based on the canvas x's and y's
 	var vec []float32 = []float32{
-		x * -1, y, 0, 0.0, 0.0, //top left
-		x, y, 0, 1.0, 0.0, //top right
-		x * -1, y * -1, 0, 0.0, 1.0, //bottom left
-		x, y * -1, 0, 1.0, 1.0, //bottom right
+		x * -1 + canvas.X, y + canvas.Y , 0, 0.0, 0.0, //top left
+		x + canvas.X, y + canvas.Y, 0, 1.0, 0.0, //top right
+		x * -1 + canvas.X, y * -1 + canvas.Y, 0, 0.0, 1.0, //bottom left
+		x + canvas.X, y * -1 + canvas.Y, 0, 1.0, 1.0, //bottom right
 	}
 
 	//the indices to create rectangles using the vectors

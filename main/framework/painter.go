@@ -89,18 +89,28 @@ func initOpenGL() uint32 {
 	return prog
 }
 
-func Draw(obj Artist, window *glfw.Window, prog uint32) {
-	vao, texture := obj.GetDrawInfo()
-	gl.ClearColor(0.1, 0.2, 0.3, 1.0)
-	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+func InitFrame(prog uint32) {
+	clear()
 	gl.UseProgram(prog)
+
+}
+
+func SwapWindowAndPollEvents(window *glfw.Window) {
+	glfw.PollEvents()
+	window.SwapBuffers()
+}
+
+func Draw(obj Artist) {
+	vao, texture := obj.GetDrawInfo()
 
 	gl.BindTexture(gl.TEXTURE_2D, texture)
 	gl.BindVertexArray(vao)
 	gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
+}
 
-	glfw.PollEvents()
-	window.SwapBuffers()
+func clear() {
+	gl.ClearColor(0.1, 0.2, 0.3, 1.0)
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 }
 
 func compileShader(source string, shaderType uint32) (uint32, error) {
