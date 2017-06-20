@@ -1,9 +1,5 @@
 package framework
 
-import (
-	"github.com/koinuri/game-project/main/global"
-)
-
 type Canvas struct {
 	Width  float32
 	Height float32
@@ -11,7 +7,7 @@ type Canvas struct {
 	Y      float32
 }
 
-//Initiates a canvas to hold the text, sprite, or shape objects.
+//Creates a rectangle section in the main window that will contain the image, shape, or text.
 func InitCanvas(i ...float32) Canvas {
 	//Set up the default values
 	var width float32 = 1.0
@@ -56,5 +52,5 @@ func InitCanvas(i ...float32) Canvas {
 
 //Calculate the aspect ratio the canvas is in, to base the image/text/shape ratio on.
 func (c *Canvas) GetAspectRatio() float32 {
-	return (float32(global.Width) * c.Width) / (float32(global.Height) * c.Height)
+	return c.Width / c.Height
 }

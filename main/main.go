@@ -4,6 +4,7 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"math"
 
 	"github.com/koinuri/game-project/main/framework"
 	"github.com/koinuri/game-project/main/global"
@@ -17,7 +18,6 @@ const (
 //Initializes the the program.
 func Init() {
 	runtime.LockOSThread()
-
 	ex, err := os.Executable()
 	if err != nil {
 		panic(err)
@@ -37,20 +37,32 @@ func main() {
 	defer framework.Clean()
 
 	//Drawing logic, only draws cute Akane right in the middle of the window for testing purposes
-	sprtopleft := framework.InitSprite("kotonoha-7.png", framework.InitCanvas(.5, .5, -.5, .5))
-	sprtopright := framework.InitSprite("kotonoha-7.png", framework.InitCanvas(.5, .5, .5, .5))
-	sprbotleft := framework.InitSprite("kotonoha-7.png", framework.InitCanvas(.5, .5, -.5, -.5))
-	sprbotright := framework.InitSprite("kotonoha-7.png", framework.InitCanvas(.5, .5, .5, -.5))
+	spr1 := framework.InitSprite("kotonoha-7.png", framework.InitCanvas(1600, 900, 0, 0))
+	spr2 := framework.InitSprite("kotonoha-7.png", framework.InitCanvas(1600, 900, 0, 0))
 
+	spr1.Scale(.5)
+	spr2.Scale(.5)
+
+	angle := float64(0.0)
 	//Main loop to draw the drawing logic created
 	for !window.ShouldClose() {
-		framework.InitFrame(program)
+		framework.InitFrame()
+		rad := angle * (math.Pi / 180)
 
-		framework.Draw(&sprtopleft)
-		framework.Draw(&sprtopright)
-		framework.Draw(&sprbotleft)
-		framework.Draw(&sprbotright)
+		spr1.AngleRotate(angle)
+		spr1.Move(450 * math.Cos(float64(rad)) * .5, 450 * math.Sin(float64(rad)) * .5)
+
+		spr2.AngleRotate(angle + 90)
+		spr2.Move(450 * math.Cos(float64(rad)) * .5, 450 * math.Sin(float64(rad)) * .5)
+
+		sprites := make([]framework.Artist, 0)
+
+		sprites = append(sprites, &spr1)
+		sprites = append(sprites, &spr2)
+
+		framework.Draw(sprites, program)
 
 		framework.SwapWindowAndPollEvents(window)
+		angle += 1
 	}
 }

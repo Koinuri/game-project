@@ -19,7 +19,9 @@ type Sprite struct {
 	Y       float32
 	vao     uint32
 	texture uint32
-	transformation mgl32.Mat4
+	translation mgl32.Mat4
+	scale mgl32.Mat4
+	rotation mgl32.Mat4
 }
 
 type origin uint32
@@ -111,14 +113,23 @@ func InitSprite(i ...interface{}) Sprite {
 	texture := createTexture(img)
 
 	//the transformation matrix should be identity matrix at the beginning
-	tmat := mgl32.Ident4()
+	tmat := mgl32.Ident4().Add(mgl32.Mat4FromRows(
+		mgl32.Vec4 { 0, 0, 0, canvas.X },
+		mgl32.Vec4 { 0, 0, 0, canvas.Y },
+		mgl32.Vec4 { 0, 0, 0, 0 },
+		mgl32.Vec4 { 0, 0, 0, 0 },
+	))
+	smat := mgl32.Ident4()
+	rmat := mgl32.Ident4()
 
 	return Sprite{
 		X:       x,
 		Y:       y,
 		vao:     vao,
 		texture: texture,
-		transformation: tmat,
+		translation: tmat,
+		scale: smat,
+		rotation: rmat,
 	}
 }
 
@@ -160,20 +171,20 @@ func createVao(img *image.RGBA, canvas *Canvas) uint32 {
 	//to ensure that the canvas shape will not affect the image ratio
 	if ratio > 1.0 {
 		ratio = 1 / ratio
-		x = canvas.Width
-		y = canvas.Height * (ratio / cratio)
+		x = canvas.Width / 2
+		y = canvas.Height * (ratio / cratio) / 2
 	} else {
-		x = canvas.Width * (ratio / cratio)
-		y = canvas.Height
+		x = canvas.Width * (ratio / cratio) / 2
+		y = canvas.Height / 2
 	}
 
 	//create vertices based on the calculated x's and y's and the coordinate of image each vertices should be associated to
 	//translate the vectors based on the canvas x's and y's
 	var vec []float32 = []float32{
-		x * -1 + canvas.X, y + canvas.Y , 0, 0.0, 0.0, //top left
-		x + canvas.X, y + canvas.Y, 0, 1.0, 0.0, //top right
-		x * -1 + canvas.X, y * -1 + canvas.Y, 0, 0.0, 1.0, //bottom left
-		x + canvas.X, y * -1 + canvas.Y, 0, 1.0, 1.0, //bottom right
+		x * -1, y, 0, 0.0, 0.0, //top left
+		x, y, 0, 1.0, 0.0, //top right
+		x * -1, y * -1, 0, 0.0, 1.0, //bottom left
+		x, y * -1, 0, 1.0, 1.0, //bottom right
 	}
 
 	//the indices to create rectangles using the vectors
@@ -247,4 +258,47 @@ func createTexture(img *image.RGBA) uint32 {
 //Returns the vao and texture held by the sprite to draw
 func (s *Sprite) GetDrawInfo() (uint32, uint32) {
 	return s.vao, s.texture
+}
+
+func (s *Sprite) GetTransformation() mgl32.Mat4 {
+	ortho := mgl32.Ortho2D(-800, 800, -450, 450)
+
+	return ortho.Mul4(s.translation.Mul4(s.rotation.Mul4(s.scale)))
+}
+
+func (s *Sprite) Move(x, y float64) {
+	s.translation = mgl32.Translate3D(float32(x), float32(y), 0)
+}
+
+func (s *Sprite) Scale(v ...float64) {
+	hasArgs := false
+	var x float32
+	var y float32
+	for i, sc := range v {
+		switch i {
+		case 0:
+			x = float32(sc)
+			y = float32(sc)
+			hasArgs = true
+		case 1:
+			y = float32(sc)
+		default:
+			panic("Invalid number of arguments.  Expected either 1 or 2 float32.  Found more")
+		}
+	}
+
+	if !hasArgs {
+		panic("Invalid number of arguments.  Could not find any arguments passed in")
+	}
+
+	s.scale = mgl32.Diag4(mgl32.Vec4{x, y, 1, 1})
+}
+
+func (s *Sprite) RadianRotate(angle float64) {
+	s.rotation = mgl32.HomogRotate3DZ(float32(angle))
+}
+
+func (s *Sprite) AngleRotate(angle float64) {
+	a := angle * (math.Pi / 180.0)
+	s.rotation = mgl32.HomogRotate3DZ(float32(a))
 }

@@ -15,10 +15,12 @@ const (
         in vec3 vp;
 		in vec2 tx;
 
+		uniform mat4 transformation;
+
 		out vec2 TexCoord;
 
         void main() {
-            gl_Position = vec4(vp, 1.0);
+            gl_Position = transformation * vec4(vp, 1.0);
 			TexCoord = tx;
         }
     ` + "\x00"
@@ -39,6 +41,9 @@ const (
 func Init(width int, height int) (*glfw.Window, uint32) {
 	window := initGlfw(width, height)
 	prog := initOpenGL()
+
+	gl.UseProgram(prog)
+
 	return window, prog
 }
 
@@ -89,10 +94,8 @@ func initOpenGL() uint32 {
 	return prog
 }
 
-func InitFrame(prog uint32) {
+func InitFrame() {
 	clear()
-	gl.UseProgram(prog)
-
 }
 
 func SwapWindowAndPollEvents(window *glfw.Window) {
@@ -100,12 +103,20 @@ func SwapWindowAndPollEvents(window *glfw.Window) {
 	window.SwapBuffers()
 }
 
-func Draw(obj Artist) {
-	vao, texture := obj.GetDrawInfo()
+func Draw(objects []Artist, prog uint32) {
+	gl.UseProgram(prog)
+
+	for _, obj := range objects {
+		vao, texture := obj.GetDrawInfo()
+		transformation := obj.GetTransformation()
+
+	tUniform := gl.GetUniformLocation(prog, gl.Str("transformation\x00"))
+	gl.UniformMatrix4fv(tUniform, 1, false, &transformation[0])
 
 	gl.BindTexture(gl.TEXTURE_2D, texture)
 	gl.BindVertexArray(vao)
 	gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
+	}
 }
 
 func clear() {
