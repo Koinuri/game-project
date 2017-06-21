@@ -116,12 +116,12 @@ func Draw(objects []Artist, prog uint32) {
 		vao, texture := obj.GetDrawInfo()
 		transformation := obj.GetTransformation()
 
-	tUniform := gl.GetUniformLocation(prog, gl.Str("transformation\x00"))
-	gl.UniformMatrix4fv(tUniform, 1, false, &transformation[0])
+		tUniform := gl.GetUniformLocation(prog, gl.Str("transformation\x00"))
+		gl.UniformMatrix4fv(tUniform, 1, false, &transformation[0])
 
-	gl.BindTexture(gl.TEXTURE_2D, texture)
-	gl.BindVertexArray(vao)
-	gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
+		gl.BindTexture(gl.TEXTURE_2D, texture)
+		gl.BindVertexArray(vao)
+		gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
 	}
 }
 

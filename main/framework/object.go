@@ -1,4 +1,5 @@
 package framework
+
 /*
 import (
 	"github.com/go-gl/mathgl/mgl32"
@@ -6,19 +7,19 @@ import (
 */
 
 type Object struct {
-	canvas Canvas
+	canvas  Canvas
 	artists map[string]Artist
-	x float32
-	y float32
-	ox float32
-	oy float32
-	scalex float32
-	scaley float32
-	angle float32
+	x       float32
+	y       float32
+	ox      float32
+	oy      float32
+	scalex  float32
+	scaley  float32
+	angle   float32
 }
 
 //Initializes the object object that stores artist objects.
-//	*InitObject(*Canvas, 
+//	*InitObject(*Canvas,
 /*
 func InitObject(i ...interface{}) Object {
 	var width float32

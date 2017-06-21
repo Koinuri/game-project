@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"path"
 	"runtime"
-	"math"
 
 	"github.com/koinuri/game-project/main/framework"
 	"github.com/koinuri/game-project/main/global"
@@ -52,7 +52,7 @@ func main() {
 		rad := angle * (math.Pi / 180)
 
 		spr2.AngleRotate(angle + 90)
-		spr2.Move(450 * math.Cos(float64(rad)) * .5, 450 * math.Sin(float64(rad)) * .5)
+		spr2.Move(450*math.Cos(float64(rad))*.5, 450*math.Sin(float64(rad))*.5)
 
 		sprites := make([]framework.Artist, 0)
 

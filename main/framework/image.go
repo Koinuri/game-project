@@ -4,29 +4,29 @@ import (
 	"fmt"
 	"image"
 	"image/draw"
-	"image/png" 
-	"math" 
+	"image/png"
+	"math"
 	"os"
 	"path"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
-	"github.com/koinuri/game-project/main/global"
 	"github.com/go-gl/mathgl/mgl32"
+	"github.com/koinuri/game-project/main/global"
 )
 
 type Sprite struct {
-	x       float32
-	y       float32
-	width float32
-	height float32
-	ox float32
-	oy float32
-	scalex float32
-	scaley float32
-	angle float32
-	origin origin
-	vao     uint32
-	texture uint32
+	x              float32
+	y              float32
+	width          float32
+	height         float32
+	ox             float32
+	oy             float32
+	scalex         float32
+	scaley         float32
+	angle          float32
+	origin         origin
+	vao            uint32
+	texture        uint32
 	transformation transformation
 }
 
@@ -101,18 +101,18 @@ func InitSprite(i ...interface{}) Sprite {
 	width, height := findWidthAndHeight(float32(img.Rect.Size().X), float32(img.Rect.Size().Y), canvas.Width, canvas.Height)
 
 	spr := Sprite{
-		x:       0.0,
-		y:       0.0,
-		width: width,
-		height: height,
-		ox: 0.0,
-		oy: 0.0,
-		scalex: 1.0,
-		scaley: 1.0,
-		angle: 0.0,
-		origin: or,
-		vao:     vao,
-		texture: texture,
+		x:              0.0,
+		y:              0.0,
+		width:          width,
+		height:         height,
+		ox:             0.0,
+		oy:             0.0,
+		scalex:         1.0,
+		scaley:         1.0,
+		angle:          0.0,
+		origin:         or,
+		vao:            vao,
+		texture:        texture,
 		transformation: InitTransformation(),
 	}
 
@@ -152,21 +152,21 @@ func (s *Sprite) updateOrigin() {
 
 	//based on the origin, get the constant to place origin (negative, 0, or positive)
 	detx := math.Mod(float64(s.origin), 3.0) - 1
-	dety := math.Floor(float64(s.origin) / 3.0) - 1
+	dety := math.Floor(float64(s.origin)/3.0) - 1
 
 	//origin at angle 0
-	ox := s.x - sx * float32(detx)
-	oy := s.y - sy * float32(dety)
+	ox := s.x - sx*float32(detx)
+	oy := s.y - sy*float32(dety)
 
 	//difference between (x,y) and (ox,oy) and distance based on the numbers calculated
 	dx := s.x - ox
 	dy := s.y - oy
-	d := float32(math.Sqrt(float64(dx * dx + dy * dy)))
+	d := float32(math.Sqrt(float64(dx*dx + dy*dy)))
 
 	//The real origin using the angle provided
 	if s.angle != 0 {
-		ox = d * float32(math.Cos(float64(s.angle))) + s.x
-		oy = d * float32(math.Sin(float64(s.angle))) + s.y
+		ox = d*float32(math.Cos(float64(s.angle))) + s.x
+		oy = d*float32(math.Sin(float64(s.angle))) + s.y
 	}
 
 	s.ox = ox
@@ -335,7 +335,7 @@ func (s *Sprite) Copy() Sprite {
 	if s == nil {
 		return InitSprite("")
 	}
-	return Sprite {
+	return Sprite{
 		s.x,
 		s.y,
 		s.width,
@@ -351,7 +351,6 @@ func (s *Sprite) Copy() Sprite {
 		s.transformation,
 	}
 }
-
 
 func (s *Sprite) applyTransformations(x, y, scalex, scaley, angle float32) Artist {
 	spr := s.Copy()
