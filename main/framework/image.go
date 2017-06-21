@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"image"
 	"image/draw"
-	"image/png"
-	"math"
+	"image/png" 
+	"math" 
 	"os"
 	"path"
 
@@ -15,29 +15,20 @@ import (
 )
 
 type Sprite struct {
-	X       float32
-	Y       float32
+	x       float32
+	y       float32
+	width float32
+	height float32
+	ox float32
+	oy float32
+	scalex float32
+	scaley float32
+	angle float32
+	origin origin
 	vao     uint32
 	texture uint32
-	translation mgl32.Mat4
-	scale mgl32.Mat4
-	rotation mgl32.Mat4
+	transformation transformation
 }
-
-type origin uint32
-
-const (
-	_              = iota
-	TopLeft origin = iota
-	TopCenter
-	TopRight
-	CenterLeft
-	Center
-	CenterRight
-	BottomLeft
-	BottomCenter
-	BottomRight
-)
 
 //Constructor for Sprite struct.  There are several possible arguments for the sprite:
 //  * New(string)
@@ -50,8 +41,7 @@ const (
 //	* Origin is where the coordinate system for this image is based on.  For example, TopLeft places the origin on the top left corner of the image, so if the image is moved to (0, 0), the top left of the image will be placed at (0, 0).  It will be defaulted to the center of the image if it has not been specified.
 func InitSprite(i ...interface{}) Sprite {
 	var dir string
-	var x float32
-	var y float32
+	var or origin = 4
 	var canvas Canvas
 
 	//The string must be provided if it's more than one
@@ -71,9 +61,7 @@ func InitSprite(i ...interface{}) Sprite {
 			panic(fmt.Sprintf("Invalid argument.  Expected Origin or Canvas, got %T", i[1]))
 		}
 		if succ1 {
-			loc, _ := i[1].(int32)
-			x = float32(math.Mod(float64(loc), 3.0) - 2)
-			y = float32(loc)/3.0 - 2
+			or = i[1].(origin)
 		} else {
 			canvas = i[1].(Canvas)
 		}
@@ -85,9 +73,7 @@ func InitSprite(i ...interface{}) Sprite {
 		_, succ1 := i[1].(Canvas)
 
 		if succ2 {
-			loc, _ := i[2].(int32)
-			x = float32(math.Mod(float64(loc), 3.0) - 2)
-			y = float32(loc)/3.0 - 2
+			or = i[2].(origin)
 		} else {
 			panic(fmt.Sprintf("Invalid argument.  Expected Origin, got %T", i[2]))
 		}
@@ -112,25 +98,27 @@ func InitSprite(i ...interface{}) Sprite {
 	vao := createVao(img, &canvas)
 	texture := createTexture(img)
 
-	//the transformation matrix should be identity matrix at the beginning
-	tmat := mgl32.Ident4().Add(mgl32.Mat4FromRows(
-		mgl32.Vec4 { 0, 0, 0, canvas.X },
-		mgl32.Vec4 { 0, 0, 0, canvas.Y },
-		mgl32.Vec4 { 0, 0, 0, 0 },
-		mgl32.Vec4 { 0, 0, 0, 0 },
-	))
-	smat := mgl32.Ident4()
-	rmat := mgl32.Ident4()
+	width, height := findWidthAndHeight(float32(img.Rect.Size().X), float32(img.Rect.Size().Y), canvas.Width, canvas.Height)
 
-	return Sprite{
-		X:       x,
-		Y:       y,
+	spr := Sprite{
+		x:       0.0,
+		y:       0.0,
+		width: width,
+		height: height,
+		ox: 0.0,
+		oy: 0.0,
+		scalex: 1.0,
+		scaley: 1.0,
+		angle: 0.0,
+		origin: or,
 		vao:     vao,
 		texture: texture,
-		translation: tmat,
-		scale: smat,
-		rotation: rmat,
+		transformation: InitTransformation(),
 	}
+
+	spr.updateOrigin()
+
+	return spr
 }
 
 func createImage(dir string) (*image.RGBA, error) {
@@ -158,25 +146,42 @@ func createImage(dir string) (*image.RGBA, error) {
 	return rgba, nil
 }
 
+func (s *Sprite) updateOrigin() {
+	sx := s.width / 2
+	sy := s.height / 2
+
+	//based on the origin, get the constant to place origin (negative, 0, or positive)
+	detx := math.Mod(float64(s.origin), 3.0) - 1
+	dety := math.Floor(float64(s.origin) / 3.0) - 1
+
+	//origin at angle 0
+	ox := s.x - sx * float32(detx)
+	oy := s.y - sy * float32(dety)
+
+	//difference between (x,y) and (ox,oy) and distance based on the numbers calculated
+	dx := s.x - ox
+	dy := s.y - oy
+	d := float32(math.Sqrt(float64(dx * dx + dy * dy)))
+
+	//The real origin using the angle provided
+	if s.angle != 0 {
+		ox = d * float32(math.Cos(float64(s.angle))) + s.x
+		oy = d * float32(math.Sin(float64(s.angle))) + s.y
+	}
+
+	s.ox = ox
+	s.oy = oy
+}
+
 func createVao(img *image.RGBA, canvas *Canvas) uint32 {
 	//calculate the image's x and y depending on image aspect ratio
 	var x float32
 	var y float32
 
-	//The aspect ratio of the image and canvas
-	ratio := float32(img.Rect.Size().X) / float32(img.Rect.Size().Y)
-	cratio := canvas.GetAspectRatio()
-
-	//the bigger side will cover the entire canvas's side, and the other side will get the size equal to the ratio of both ratios 
-	//to ensure that the canvas shape will not affect the image ratio
-	if ratio > 1.0 {
-		ratio = 1 / ratio
-		x = canvas.Width / 2
-		y = canvas.Height * (ratio / cratio) / 2
-	} else {
-		x = canvas.Width * (ratio / cratio) / 2
-		y = canvas.Height / 2
-	}
+	//The width and height of image within canvas
+	w, h := findWidthAndHeight(float32(img.Rect.Size().X), float32(img.Rect.Size().Y), canvas.Width, canvas.Height)
+	x = w / 2
+	y = h / 2
 
 	//create vertices based on the calculated x's and y's and the coordinate of image each vertices should be associated to
 	//translate the vectors based on the canvas x's and y's
@@ -220,6 +225,22 @@ func createVao(img *image.RGBA, canvas *Canvas) uint32 {
 	return vao
 }
 
+func findWidthAndHeight(imgWidth, imgHeight, canvasWidth, canvasHeight float32) (float32, float32) {
+	ratio := imgWidth / imgHeight
+	cratio := canvasWidth / canvasHeight
+	var w float32
+	var h float32
+
+	if ratio > 1 {
+		w = canvasWidth
+		h = canvasHeight * (ratio / cratio)
+	} else {
+		w = canvasWidth * (ratio / cratio)
+		h = canvasHeight
+	}
+
+	return w, h
+}
 func createTexture(img *image.RGBA) uint32 {
 	//initiate texture
 	var texture uint32
@@ -259,15 +280,17 @@ func createTexture(img *image.RGBA) uint32 {
 func (s *Sprite) GetDrawInfo() (uint32, uint32) {
 	return s.vao, s.texture
 }
-
 func (s *Sprite) GetTransformation() mgl32.Mat4 {
-	ortho := mgl32.Ortho2D(-800, 800, -450, 450)
-
-	return ortho.Mul4(s.translation.Mul4(s.rotation.Mul4(s.scale)))
+	return s.transformation.translation.Mul4(s.transformation.rotation.Mul4(s.transformation.scale))
 }
 
 func (s *Sprite) Move(x, y float64) {
-	s.translation = mgl32.Translate3D(float32(x), float32(y), 0)
+	s.x = float32(x)
+	s.y = float32(y)
+
+	s.updateOrigin()
+
+	s.transformation.translation = mgl32.Translate3D(s.ox, s.oy, 0)
 }
 
 func (s *Sprite) Scale(v ...float64) {
@@ -291,14 +314,54 @@ func (s *Sprite) Scale(v ...float64) {
 		panic("Invalid number of arguments.  Could not find any arguments passed in")
 	}
 
-	s.scale = mgl32.Diag4(mgl32.Vec4{x, y, 1, 1})
+	s.scalex = x
+	s.scaley = y
+
+	s.transformation.scale = mgl32.Diag4(mgl32.Vec4{x, y, 1, 1})
 }
 
 func (s *Sprite) RadianRotate(angle float64) {
-	s.rotation = mgl32.HomogRotate3DZ(float32(angle))
+	s.angle = float32(angle)
+	s.transformation.rotation = mgl32.HomogRotate3DZ(float32(angle))
 }
 
 func (s *Sprite) AngleRotate(angle float64) {
 	a := angle * (math.Pi / 180.0)
-	s.rotation = mgl32.HomogRotate3DZ(float32(a))
+	s.angle = float32(a)
+	s.transformation.rotation = mgl32.HomogRotate3DZ(float32(a))
+}
+
+func (s *Sprite) Copy() Sprite {
+	if s == nil {
+		return InitSprite("")
+	}
+	return Sprite {
+		s.x,
+		s.y,
+		s.width,
+		s.height,
+		s.ox,
+		s.oy,
+		s.scalex,
+		s.scaley,
+		s.angle,
+		s.origin,
+		s.vao,
+		s.texture,
+		s.transformation,
+	}
+}
+
+
+func (s *Sprite) applyTransformations(x, y, scalex, scaley, angle float32) Artist {
+	spr := s.Copy()
+
+	spr.x = spr.x + x
+	spr.y = spr.y + y
+	spr.updateOrigin()
+	spr.scalex = spr.scalex * scalex
+	spr.scaley = spr.scaley * scaley
+	spr.angle = spr.angle + angle
+
+	return &spr
 }

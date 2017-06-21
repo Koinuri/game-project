@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"runtime"
@@ -40,7 +41,8 @@ func main() {
 	spr1 := framework.InitSprite("kotonoha-7.png", framework.InitCanvas(1600, 900, 0, 0))
 	spr2 := framework.InitSprite("kotonoha-7.png", framework.InitCanvas(1600, 900, 0, 0))
 
-	spr1.Scale(.5)
+	fmt.Println(spr1)
+
 	spr2.Scale(.5)
 
 	angle := float64(0.0)
@@ -48,9 +50,6 @@ func main() {
 	for !window.ShouldClose() {
 		framework.InitFrame()
 		rad := angle * (math.Pi / 180)
-
-		spr1.AngleRotate(angle)
-		spr1.Move(450 * math.Cos(float64(rad)) * .5, 450 * math.Sin(float64(rad)) * .5)
 
 		spr2.AngleRotate(angle + 90)
 		spr2.Move(450 * math.Cos(float64(rad)) * .5, 450 * math.Sin(float64(rad)) * .5)

@@ -10,8 +10,8 @@ type Canvas struct {
 //Creates a rectangle section in the main window that will contain the image, shape, or text.
 func InitCanvas(i ...float32) Canvas {
 	//Set up the default values
-	var width float32 = 1.0
-	var height float32 = 1.0
+	var width float32 = 1600
+	var height float32 = 900
 	var x float32 = 0.0
 	var y float32 = 0.0
 	countFloat := 0

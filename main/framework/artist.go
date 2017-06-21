@@ -6,4 +6,5 @@ import "github.com/go-gl/mathgl/mgl32"
 type Artist interface {
 	GetDrawInfo() (uint32, uint32)
 	GetTransformation() mgl32.Mat4
+	applyTransformations(x, y, scalex, scaley, angle float32) Artist
 }

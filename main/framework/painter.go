@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/go-gl/mathgl/mgl32"
 )
 
 const (
@@ -16,11 +17,12 @@ const (
 		in vec2 tx;
 
 		uniform mat4 transformation;
+		uniform mat4 projection;
 
 		out vec2 TexCoord;
 
         void main() {
-            gl_Position = transformation * vec4(vp, 1.0);
+            gl_Position = projection * transformation * vec4(vp, 1.0);
 			TexCoord = tx;
         }
     ` + "\x00"
@@ -43,6 +45,10 @@ func Init(width int, height int) (*glfw.Window, uint32) {
 	prog := initOpenGL()
 
 	gl.UseProgram(prog)
+
+	ortho := mgl32.Ortho2D(-800, 800, -450, 450)
+	orthoUniform := gl.GetUniformLocation(prog, gl.Str("projection\x00"))
+	gl.UniformMatrix4fv(orthoUniform, 1, false, &ortho[0])
 
 	return window, prog
 }
