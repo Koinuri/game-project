@@ -1,8 +1,8 @@
 package framework
 
 import (
-	"math"
 	"fmt"
+	"math"
 )
 
 type Object struct {
@@ -17,8 +17,8 @@ type Object struct {
 	scalex  float32
 	scaley  float32
 	angle   float32
-	bounds	Bound
-	origin origin
+	bounds  Bound
+	origin  origin
 }
 
 //Initializes the object object that stores artist objects.
@@ -29,7 +29,7 @@ type Object struct {
 //	*InitObject(width, height, x, y)
 //	*InitObject(width, height, x, y, origin)
 //Where:
-//	width and height are the width and height of the 
+//	width and height are the width and height of the
 func InitObject(i ...interface{}) Object {
 	var width float32 = 1600
 	var height float32 = 900
@@ -49,7 +49,7 @@ func InitObject(i ...interface{}) Object {
 
 		r, isFloat := item.(float32)
 		if isFloat {
-			switch (countFloats) {
+			switch countFloats {
 			case 0:
 				width = r
 				countFloats++
@@ -72,7 +72,7 @@ func InitObject(i ...interface{}) Object {
 		panic(fmt.Sprintf("Invalid number of arguments.  Expected 2 or 4 float32, found %v.", countFloats))
 	}
 
-	obj := Object {
+	obj := Object{
 		a,
 		n,
 		x,
@@ -84,7 +84,7 @@ func InitObject(i ...interface{}) Object {
 		1,
 		1,
 		0,
-		Bound {0, 0, 0, 0},
+		Bound{0, 0, 0, 0},
 		or,
 	}
 
@@ -128,7 +128,7 @@ func (o *Object) setBounds() {
 	up := o.oy + (o.height / 2)
 	down := o.oy + (o.height / 2)
 
-	o.bounds = Bound {left, right, up, down}
+	o.bounds = Bound{left, right, up, down}
 }
 
 //Creates a sprite to be added to the object then returns the reference to that sprite
@@ -219,7 +219,7 @@ func (o *Object) Scale(i ...float64) {
 	var y float32 = 1.0
 
 	for a, b := range i {
-		switch (a) {
+		switch a {
 		case 0:
 			x = float32(b)
 			y = float32(b)

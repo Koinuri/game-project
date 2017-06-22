@@ -166,15 +166,15 @@ func (s *Sprite) updateOrigin() {
 	var oa float64
 
 	if d > 0 {
-		oa = math.Atan(float64(dy/dx))
+		oa = math.Atan(float64(dy / dx))
 	} else {
 		oa = 0
 	}
 
 	//The real origin using the angle provided
 	if s.angle != 0 {
-		ox = d*float32(math.Cos(float64(s.angle) + oa)) + s.x
-		oy = d*float32(math.Sin(float64(s.angle) + oa)) + s.y
+		ox = d*float32(math.Cos(float64(s.angle)+oa)) + s.x
+		oy = d*float32(math.Sin(float64(s.angle)+oa)) + s.y
 	}
 
 	s.ox = ox

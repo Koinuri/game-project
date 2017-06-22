@@ -1,7 +1,7 @@
 package main
 
 import (
-//	"fmt"
+	//	"fmt"
 	"math"
 	"os"
 	"path"
@@ -56,7 +56,7 @@ func main() {
 
 		obj.AngleRotate(angle * 3)
 
-		obj.Move(450 * math.Cos(rad) * .5, 450 * math.Sin(rad) * .5)
+		obj.Move(450*math.Cos(rad)*.5, 450*math.Sin(rad)*.5)
 
 		obj.Scale(.3)
 
