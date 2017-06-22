@@ -147,8 +147,8 @@ func createImage(dir string) (*image.RGBA, error) {
 }
 
 func (s *Sprite) updateOrigin() {
-	sx := s.width / 2
-	sy := s.height / 2
+	sx := s.width / 2 * s.scalex
+	sy := s.height / 2 * s.scaley
 
 	//based on the origin, get the constant to place origin (negative, 0, or positive)
 	detx := math.Mod(float64(s.origin), 3.0) - 1
@@ -163,10 +163,18 @@ func (s *Sprite) updateOrigin() {
 	dy := s.y - oy
 	d := float32(math.Sqrt(float64(dx*dx + dy*dy)))
 
+	var oa float64
+
+	if d > 0 {
+		oa = math.Atan(float64(dy/dx))
+	} else {
+		oa = 0
+	}
+
 	//The real origin using the angle provided
 	if s.angle != 0 {
-		ox = d*float32(math.Cos(float64(s.angle))) + s.x
-		oy = d*float32(math.Sin(float64(s.angle))) + s.y
+		ox = d*float32(math.Cos(float64(s.angle) + oa)) + s.x
+		oy = d*float32(math.Sin(float64(s.angle) + oa)) + s.y
 	}
 
 	s.ox = ox
@@ -281,16 +289,15 @@ func (s *Sprite) GetDrawInfo() (uint32, uint32) {
 	return s.vao, s.texture
 }
 func (s *Sprite) GetTransformation() mgl32.Mat4 {
+	s.updateOrigin()
+
+	s.transformation.translation = mgl32.Translate3D(s.ox, s.oy, 0)
 	return s.transformation.translation.Mul4(s.transformation.rotation.Mul4(s.transformation.scale))
 }
 
 func (s *Sprite) Move(x, y float64) {
 	s.x = float32(x)
 	s.y = float32(y)
-
-	s.updateOrigin()
-
-	s.transformation.translation = mgl32.Translate3D(s.ox, s.oy, 0)
 }
 
 func (s *Sprite) Scale(v ...float64) {
@@ -322,12 +329,14 @@ func (s *Sprite) Scale(v ...float64) {
 
 func (s *Sprite) RadianRotate(angle float64) {
 	s.angle = float32(angle)
+
 	s.transformation.rotation = mgl32.HomogRotate3DZ(float32(angle))
 }
 
 func (s *Sprite) AngleRotate(angle float64) {
 	a := angle * (math.Pi / 180.0)
 	s.angle = float32(a)
+
 	s.transformation.rotation = mgl32.HomogRotate3DZ(float32(a))
 }
 
@@ -355,12 +364,16 @@ func (s *Sprite) Copy() Sprite {
 func (s *Sprite) applyTransformations(x, y, scalex, scaley, angle float32) Artist {
 	spr := s.Copy()
 
-	spr.x = spr.x + x
-	spr.y = spr.y + y
-	spr.updateOrigin()
-	spr.scalex = spr.scalex * scalex
-	spr.scaley = spr.scaley * scaley
-	spr.angle = spr.angle + angle
+	sx2 := spr.scalex * scalex
+	sy2 := spr.scaley * scaley
+	spr.Scale(float64(sx2), float64(sy2))
+
+	rad := spr.angle + angle
+	spr.RadianRotate(float64(rad))
+
+	x2 := spr.x + x
+	y2 := spr.y + y
+	spr.Move(float64(x2), float64(y2))
 
 	return &spr
 }

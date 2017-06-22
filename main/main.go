@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+//	"fmt"
 	"math"
 	"os"
 	"path"
@@ -37,29 +37,30 @@ func main() {
 	window, program := framework.Init(width, height)
 	defer framework.Clean()
 
-	//Drawing logic, only draws cute Akane right in the middle of the window for testing purposes
-	spr1 := framework.InitSprite("kotonoha-7.png", framework.InitCanvas(1600, 900, 0, 0))
-	spr2 := framework.InitSprite("kotonoha-7.png", framework.InitCanvas(1600, 900, 0, 0))
+	//Drawing logic
+	obj := framework.InitObject()
+	spr1 := obj.CreateSprite("first akane chan", "kotonoha-7.png", framework.BottomCenter)
+	spr2 := obj.CreateSprite("second akane chan", "kotonoha-7.png", framework.BottomCenter)
+	spr3 := obj.CreateSprite("third akane chan", "kotonoha-7.png", framework.BottomCenter)
 
-	fmt.Println(spr1)
-
-	spr2.Scale(.5)
+	spr1.AngleRotate(90)
+	spr2.AngleRotate(210)
+	spr3.AngleRotate(330)
 
 	angle := float64(0.0)
 	//Main loop to draw the drawing logic created
 	for !window.ShouldClose() {
 		framework.InitFrame()
+
 		rad := angle * (math.Pi / 180)
 
-		spr2.AngleRotate(angle + 90)
-		spr2.Move(450*math.Cos(float64(rad))*.5, 450*math.Sin(float64(rad))*.5)
+		obj.AngleRotate(angle * 3)
 
-		sprites := make([]framework.Artist, 0)
+		obj.Move(450 * math.Cos(rad) * .5, 450 * math.Sin(rad) * .5)
 
-		sprites = append(sprites, &spr1)
-		sprites = append(sprites, &spr2)
+		obj.Scale(.3)
 
-		framework.Draw(sprites, program)
+		framework.Draw(obj.GetArtists(), program)
 
 		framework.SwapWindowAndPollEvents(window)
 		angle += 1
